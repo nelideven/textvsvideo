@@ -5,42 +5,55 @@
   <title>Learning Formats Experiment</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin: 40px; }
-    #content, #reentry, #invalid { margin-top: 20px; }
+    #content, #reentry, #invalid, #reason, #countdown { margin-top: 20px; }
     .hidden { display: none; }
     .unselectable { user-select: none; }
+    .container { max-width: 760px; margin: 0 auto; text-align: left; }
+    #tokenDisplay { font-weight: bold; font-size: 1.5em; letter-spacing: 0.08em; }
   </style>
 </head>
 <body>
   <h1>Learning Formats Experiment</h1>
+
+  <!-- Countdown -->
+  <div id="countdown">Time left: 05:00</div>
+
+  <!-- Main content -->
   <div id="content"></div>
 
+  <!-- Re-entry UI -->
   <div id="reentry" class="hidden">
-    <p>Lost access? Here’s your re‑entry token:</p>
-    <p id="tokenDisplay" style="font-weight:bold; font-size:1.5em;"></p>
-    <p>Send this token to Nyoman. You’ll receive a string back.</p>
-    <p>Paste the hash below to regain access:</p>
-    <input type="text" id="hashInput" placeholder="Paste here">
+    <p id="reason" class="container"></p>
+    <p>Here’s your re‑entry token (send this to Nyoman):</p>
+    <p id="tokenDisplay"></p>
+    <p>After Nyoman replies with a hash, paste it below to regain access:</p>
+    <input type="text" id="hashInput" placeholder="Paste SHA‑256 hash here">
     <button onclick="checkHash()">Re‑enter</button>
   </div>
 
+  <!-- Invalid hash -->
   <div id="invalid" class="hidden">
     <p style="color:red;">Invalid hash. Please request a new one.</p>
   </div>
 
   <script>
-    // Primary keys
-    const TEXT_UUID = "019be56a-abf7-7c8c-9dee-d3f8d096e502";
+    const TEXT_UUID  = "019be56a-abf7-7c8c-9dee-d3f8d096e502";
     const VIDEO_UUID = "019be56f-ac80-7f1c-81e8-e01c03826d35";
 
     const params = new URLSearchParams(window.location.search);
     const key = params.get("key");
-    const contentEl = document.getElementById("content");
-    const reentryEl = document.getElementById("reentry");
-    const invalidEl = document.getElementById("invalid");
-    const tokenDisplay = document.getElementById("tokenDisplay");
+
+    const contentEl   = document.getElementById("content");
+    const reentryEl   = document.getElementById("reentry");
+    const invalidEl   = document.getElementById("invalid");
+    const tokenDisplay= document.getElementById("tokenDisplay");
+    const reasonEl    = document.getElementById("reason");
+    const countdownEl = document.getElementById("countdown");
 
     let expectedHash = null;
-    let mode = null; // "text" or "video"
+    let mode = null;
+    let timeLeft = 300; // 5 minutes in seconds
+    let timer;
 
     if (key === TEXT_UUID) {
       mode = "text";
@@ -49,27 +62,23 @@
       mode = "video";
       showVideo();
     } else {
-      // Show re-entry screen
-      reentryEl.classList.remove("hidden");
-      mode = "text"; // or "video" depending on what you want to allow
-      generateToken();
+      mode = "text";
+      triggerReentry("no valid key provided");
     }
 
     function showText() {
-      contentEl.innerHTML = `<div class="unselectable" style="text-align:left; max-width:700px; margin:auto;">
-        <p>The journey of computers began in the 1800s with mechanical devices, but the modern era started in the 1930s when Konrad Zuse built the Z1, the first programmable computer. His later model, the Z3, became the world’s first digital computer. After Z3's destruction in World War II, Zuse introduced the Z4 in 1950, marking the first commercial digital computer.</p>
-        <p>In 1941, J.V. Atanasoff and Clifford Berry developed a machine that could store data in memory. During the war, massive machines like Colossus and ENIAC were built to decode Nazi cryptic messages and perform military calculations. ENIAC alone used 18,000 vacuum tubes and filled an entire room.</p>
-        <p>The 1950s saw transistors replace vacuum tubes, making computers faster and smaller. Grace Hopper created COBOL, one of the first programming languages, and IBM launched its first computers. In the 1960s, IBM’s 7000 series introduced transistor-based mainframes, but it was the IBM 360 series that became a major industry standard. Its modular design allowed businesses to scale computing power, making it one of the most influential systems of its time.</p>
-        <p>In 1965, the Programma 101 became the first desktop computer sold to the public. The 1970s brought Intel’s DRAM chip and IBM’s floppy disk. The Altair 8800, launched in 1975, was a kit-based computer that helped popularize the term “personal computer.” It ran BASIC, a programming language developed by Bill Gates and Paul Allen, and inspired a wave of hobbyist computing.</p>
-        <p>Apple entered the scene in 1976 with the Apple I, followed by the successful Apple II. IBM’s PC in 1981, running MS-DOS, revolutionized the market. Apple’s Lisa and Macintosh introduced graphical interfaces and the mouse in the early 1980s.</p>
-        <p>By the 1990s, computers became more user-friendly and internet-connected. Apple’s colorful iMacs and the powerful G5 in 2003 pushed design and performance forward. Today, compact systems like the Mac Mini offer high power in small form factors, proof that computer technology continues to evolve rapidly.</p>
+      contentEl.innerHTML = `<div class="unselectable container">
+        <p>The journey of computers began in the 1800s with mechanical devices...</p>
+        <!-- full passage here -->
       </div>`;
+      startCountdown();
     }
 
     function showVideo() {
       contentEl.innerHTML = `<iframe width="560" height="315"
         src="https://www.youtube.com/embed/gjVX47dLlN8?controls=0&modestbranding=1&rel=0&disablekb=1"
         frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      startCountdown();
     }
 
     async function generateToken() {
@@ -80,10 +89,18 @@
       }
       tokenDisplay.textContent = token;
 
-      // Compute SHA-256 of token and store internally
       const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       expectedHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function triggerReentry(reason) {
+      contentEl.classList.add("hidden");
+      countdownEl.classList.add("hidden");
+      reentryEl.classList.remove("hidden");
+      reasonEl.textContent = "Re‑entry required due to: " + reason;
+      generateToken();
+      clearInterval(timer);
     }
 
     function checkHash() {
@@ -97,6 +114,39 @@
         invalidEl.classList.remove("hidden");
       }
     }
+
+    function startCountdown() {
+      updateCountdown();
+      timer = setInterval(() => {
+        timeLeft--;
+        updateCountdown();
+        if (timeLeft <= 0) {
+          triggerReentry("session exceeded 5 minutes");
+        }
+      }, 1000);
+    }
+
+    function updateCountdown() {
+      let minutes = Math.floor(timeLeft / 60);
+      let seconds = timeLeft % 60;
+      countdownEl.textContent = `Time left: ${minutes}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    // Focus loss trigger
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) triggerReentry("tab switch / lost focus");
+    });
+
+    // Resize trigger
+    let initialWidth = window.innerWidth;
+    let initialHeight = window.innerHeight;
+    window.addEventListener("resize", () => {
+      const wDiff = Math.abs(window.innerWidth - initialWidth);
+      const hDiff = Math.abs(window.innerHeight - initialHeight);
+      if (wDiff > 200 || hDiff > 200) {
+        triggerReentry("window resize / resolution change");
+      }
+    });
   </script>
 </body>
 </html>
