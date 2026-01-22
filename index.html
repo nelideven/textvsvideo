@@ -17,9 +17,9 @@
   <div id="reentry" class="hidden">
     <p>Lost access? Here’s your re‑entry token:</p>
     <p id="tokenDisplay" style="font-weight:bold; font-size:1.5em;"></p>
-    <p>Send this token to Nyoman. You’ll receive back a SHA‑256 hash.</p>
+    <p>Send this token to Nyoman. You’ll receive a string back.</p>
     <p>Paste the hash below to regain access:</p>
-    <input type="text" id="hashInput" placeholder="Paste SHA‑256 hash here">
+    <input type="text" id="hashInput" placeholder="Paste here">
     <button onclick="checkHash()">Re‑enter</button>
   </div>
 
@@ -64,7 +64,7 @@
 
     function showVideo() {
       contentEl.innerHTML = `<iframe width="560" height="315"
-        src="https://www.youtube.com/embed/VIDEO_ID?controls=0&modestbranding=1&rel=0&disablekb=1"
+        src="https://www.youtube.com/embed/gjVX47dLlN8?controls=0&modestbranding=1&rel=0&disablekb=1"
         frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
     }
 
