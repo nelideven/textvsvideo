@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Learning Formats Experiment</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 40px; }
+    #content, #reentry, #invalid { margin-top: 20px; }
+    .hidden { display: none; }
+    .unselectable { user-select: none; }
+  </style>
+</head>
+<body>
+  <h1>Learning Formats Experiment</h1>
+  <div id="content"></div>
+
+  <div id="reentry" class="hidden">
+    <p>Lost access? Here’s your re‑entry token:</p>
+    <p id="tokenDisplay" style="font-weight:bold; font-size:1.5em;"></p>
+    <p>Send this token to Nyoman. You’ll receive back a SHA‑256 hash.</p>
+    <p>Paste the hash below to regain access:</p>
+    <input type="text" id="hashInput" placeholder="Paste SHA‑256 hash here">
+    <button onclick="checkHash()">Re‑enter</button>
+  </div>
+
+  <div id="invalid" class="hidden">
+    <p style="color:red;">Invalid hash. Please request a new one.</p>
+  </div>
+
+  <script>
+    // Primary keys
+    const TEXT_UUID = "019be56a-abf7-7c8c-9dee-d3f8d096e502";
+    const VIDEO_UUID = "019be56f-ac80-7f1c-81e8-e01c03826d35";
+
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get("key");
+    const contentEl = document.getElementById("content");
+    const reentryEl = document.getElementById("reentry");
+    const invalidEl = document.getElementById("invalid");
+    const tokenDisplay = document.getElementById("tokenDisplay");
+
+    let expectedHash = null;
+    let mode = null; // "text" or "video"
+
+    if (key === TEXT_UUID) {
+      mode = "text";
+      showText();
+    } else if (key === VIDEO_UUID) {
+      mode = "video";
+      showVideo();
+    } else {
+      // Show re-entry screen
+      reentryEl.classList.remove("hidden");
+      mode = "text"; // or "video" depending on what you want to allow
+      generateToken();
+    }
+
+    function showText() {
+      contentEl.innerHTML = `<div class="unselectable">
+        <p>The journey of computers began in the 1800s with mechanical devices...</p>
+        <!-- full passage here -->
+      </div>`;
+    }
+
+    function showVideo() {
+      contentEl.innerHTML = `<iframe width="560" height="315"
+        src="https://www.youtube.com/embed/VIDEO_ID?controls=0&modestbranding=1&rel=0&disablekb=1"
+        frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    }
+
+    async function generateToken() {
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let token = "";
+      for (let i = 0; i < 4; i++) {
+        token += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      tokenDisplay.textContent = token;
+
+      // Compute SHA-256 of token and store internally
+      const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      expectedHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function checkHash() {
+      const entered = document.getElementById("hashInput").value.trim().toLowerCase();
+      if (entered === expectedHash) {
+        reentryEl.classList.add("hidden");
+        invalidEl.classList.add("hidden");
+        if (mode === "text") showText();
+        else showVideo();
+      } else {
+        invalidEl.classList.remove("hidden");
+      }
+    }
+  </script>
+</body>
+</html>
