@@ -111,9 +111,13 @@
       contentEl.classList.remove("hidden");
       reentryEl.classList.add("hidden");
       invalidEl.classList.add("hidden");
-      contentEl.innerHTML = `<iframe width="560" height="315"
-        src="https://www.youtube.com/embed/gjVX47dLlN8?controls=0&modestbranding=1&rel=0&disablekb=1"
-        frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      contentEl.innerHTML = `
+        <iframe width="560" height="315"
+          src="https://www.youtube.com/embed/gjVX47dLlN8?modestbranding=1&rel=0&disablekb=1&fs=1&cc_load_policy=1"
+          frameborder="0"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowfullscreen>
+        </iframe>`;
       startCountdown();
     }
 
