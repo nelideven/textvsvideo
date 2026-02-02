@@ -148,6 +148,7 @@
     function clearReentry() {
       localStorage.removeItem(REENTRY_FLAG_KEY);
       localStorage.removeItem(REENTRY_REASON_KEY);
+      localStorage.removeItem(SESSION_START_KEY);
     }
 
     function checkHash() {
