@@ -42,6 +42,7 @@
 
     const params = new URLSearchParams(window.location.search);
     const key = params.get("key");
+    const scform = params.get("scnd");
 
     const contentEl   = document.getElementById("content");
     const reentryEl   = document.getElementById("reentry");
@@ -84,6 +85,11 @@
         mode = localStorage.getItem(MODE_KEY) || "text";
         triggerReentry("no valid key provided");
       }
+    }
+
+    // Second form
+    if (scform === true) {
+      clearReentry();
     }
 
     function showText() {
@@ -149,6 +155,7 @@
       localStorage.removeItem(REENTRY_FLAG_KEY);
       localStorage.removeItem(REENTRY_REASON_KEY);
       localStorage.removeItem(SESSION_START_KEY);
+      localStorage.setItem(SESSION_START_KEY, Date.now());
     }
 
     function checkHash() {
